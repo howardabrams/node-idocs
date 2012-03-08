@@ -1,0 +1,23 @@
+{
+  "author": "Howard Abrams <howard.abrams@gmail.com> (http://www.github.com/howardabrams)",
+  "name": "node-idocs",
+  "description": "Generate internal functional documentation of your JavaScript project",
+  "version": "0.0.1",
+  "homepage": "http://www.github.com/howardabrams/node-idocs",
+  "keywords": [
+    "documentation",
+    "dox"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/howardabrams/node-idocs.git"
+  },
+  "main": "./app.js",
+  "engines": {
+    "node": ">=0.6"
+  },
+  "dependencies" : {
+    "dox": ">=0.2.0",
+    "handlebars": ">=1.0.5beta"
+  } 
+}

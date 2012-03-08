@@ -1,0 +1,61 @@
+<html>
+<head>
+  <title>{{filename}}</title>
+</head>
+<body>
+  <h1>{{title}}</h1>
+  <div class="file-description">
+    {{#if head}}
+      {{{head.description.full}}}
+    {{/if}}
+  </div>
+  
+  {{#each functions}}
+    <a name="{{ctx.name}}"></a>
+    <h2>
+        <span class="function-type">{{ctx.type}}</span>
+        <span class="function-name">{{ctx.name}}</span>
+    </h2>
+    <div class="function-description">
+        {{{description.full}}}
+    </div>
+    <div class="function-tags">
+      {{#if params}}
+      <h3>Parameters</h3>
+        <ul>
+        {{#each params}}
+          <li>
+            <span class="param-type">
+            {{#if types}}
+              ({{types}})
+            {{/if}}
+            </span>
+            <b>{{name}}</b> &#8212; {{description}}
+          </li>
+        {{/each}}
+        </ul>
+      {{/if}}
+
+      {{#if returns}}
+      <h3>Return Value</h3>
+        <ul>
+          <li>
+            <span class="param-type">
+            {{#if types}}
+              ({{types}})
+            {{/if}}
+            </span>
+            {{description}}
+          </li>
+        </ul>
+      {{/if}}
+    </div>
+    
+    <div class="function-code">
+      <pre>
+        {{code}}
+      </pre>
+    </div>
+  {{/each}}
+</body>
+</html>
