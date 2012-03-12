@@ -61,11 +61,11 @@ function generate ( options ) {
     var files = getfiles.all( options.include, options.exclude );
     // var links = getfiles.arrayToMap(files);
     
-    mkdirs( __dirname, options.output );
+    mkdirs( options.output );
     
     for (var f in files) {
         var file = files[f];
-        var outputFile = path.join ( __dirname, options.output, 
+        var outputFile = path.join ( options.output, 
                 path.basename( file, '.js' ) + '.html' );
         console.log("Processing Script:", file, "->", outputFile);
         generateFile(file, options.pagetemplate, outputFile);
@@ -159,20 +159,21 @@ function getFileGuts ( file ) {
  * exists), then the error is silently ignored. This will probably caused us
  * problems.
  * 
- * @param {String} parent The parent directory to create it in. This must exist.  
  * @param {String} file   The pathname to create, e.g. `public/docs` 
  */
-function mkdirs ( parent, file ) {
-    // console.log(parent, file);
-    if ( file == parent || file === '.' ) {
+function mkdirs ( file ) {
+    // console.log(file);
+    if ( file === '/' || file === '.' ) {
         return;
     }
-    mkdirs ( parent, path.dirname(file) );
+    mkdirs ( path.dirname(file) );
     
     try {
-        fs.mkdirSync( path.join(parent, file) );
+        fs.mkdirSync( file );
     }
     catch (e) {
-        // We are just going to ignore all exceptions...
+        if (e.code !== 'EEXIST') {
+            console.warn(file, JSON.stringify(e) );
+        }
     }
 }
