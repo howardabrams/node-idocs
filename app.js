@@ -12,6 +12,23 @@ var path = require('path');
 var getfiles  = require('./lib/getfiles');
 var templates = require('./lib/templates');
 
+/**
+ * Primary interface to this module.
+ * 
+ * Given the collection of `options`, this function generates all the 
+ * documentation for a project.
+ * 
+ * ### Options:
+ * 
+ *   - `include`- An array of files and directories to look for `*.js` script files.
+ *   - `exclude`- An array of files and directories to exclude from the list of included files.
+ *   - `output`- A directory where the generated HTML files should be written.
+ *   - `pagetemplate`- A Handlebar template to use for each source file
+ *   - `toctemplate`- A Handlebar template to use for creating a list of all source files.
+ *   
+ * @param {Object} options A collection of named parameters
+ * @api public
+ */
 
 function generate ( options ) {
     if ( ! options ) {
@@ -44,12 +61,14 @@ function generate ( options ) {
     var files = getfiles.all( options.include, options.exclude );
     // var links = getfiles.arrayToMap(files);
     
+    mkdirs( __dirname, options.output );
+    
     for (var f in files) {
         var file = files[f];
         var outputFile = path.join ( __dirname, options.output, 
                 path.basename( file, '.js' ) + '.html' );
         console.log("Processing Script:", file, "->", outputFile);
-        // generateFile(file, options.pagetemplate, outputFile);
+        generateFile(file, options.pagetemplate, outputFile);
     }
 }
 exports.generate = generate;
@@ -58,18 +77,13 @@ exports.generate = generate;
  * Combines a *template* with the model (read by parsing the `file`) and writes
  * out to a given `output` file.
  * 
- * @param file {String} name of the JavaScript file to read and parse
- * @param template {Object} the Handebar template instance
- * @param output {String} name of the HTML file to write the results
+ * @param {String} file name of the JavaScript file to read and parse
+ * @param {Object} template the Handebar template instance
+ * @param {String} output name of the HTML file to write the results
  */
 var generateFile = function(file, template, output) {
     var model = getFileGuts(file);
-    /*
-        console.log('---------------------------------------');
-        console.log( model );
-        console.log('---------------------------------------');
-        console.log( template(model) );
-     */
+
     fs.writeFileSync(output, template(model) );
 };
 
@@ -90,6 +104,7 @@ var generateFile = function(file, template, output) {
  * @param {String} file name of the file to read and parse 
  * @returns {Object} A JavaScript object
  */
+
 function getFileGuts ( file ) {
     var comments = fs.readFileSync ( file, 'utf8' );
     
@@ -98,33 +113,66 @@ function getFileGuts ( file ) {
         file:  path.basename(file),
         filename: file
     };
-    var functions = dox.parseComments(comments);
-    if ( functions && functions[0] && functions[0].ctx.type == 'declaration' ) {
-        model.head = functions.shift();
-    }
     
-    // The template gets a little complicated in the way the 'tags' section
-    // works, so we are going to group them together in order to make our
-    // templates simpler:
-    
-    for ( var f in functions ) {
-        var fun = functions[f];
-        for ( var t in fun.tags ) {
-            var tag = fun.tags[t];
-            if ( tag.type === 'param' ) {
-                if ( ! fun.params ) {
-                    fun.params = [];
+    try {
+        var functions = dox.parseComments(comments);
+        if ( functions && functions[0] && functions[0].ctx.type == 'declaration' ) {
+            model.head = functions.shift();
+        }
+        
+        // The template gets a little complicated in the way the 'tags' section
+        // works, so we are going to group them together in order to make our
+        // templates simpler:
+        
+        for ( var f in functions ) {
+            var fun = functions[f];
+            for ( var t in fun.tags ) {
+                var tag = fun.tags[t];
+                if ( tag.type === 'param' ) {
+                    if ( ! fun.params ) {
+                        fun.params = [];
+                    }
+                    fun.params.push(tag);
                 }
-                fun.params.push(tag);
-            }
-            if ( tag.type === 'returns' ) {
-                fun.returns = tag;
+                if ( tag.type === 'returns' || tag.type === 'return') {
+                    // console.log("Returns", JSON.stringify(tag));
+                    fun.returns = tag;
+                }
             }
         }
+        model.functions = functions;
     }
-    model.functions = functions;
-    
+    catch (err) {
+        console.log("Can not process %s- %s", file, err);
+    }
     return model;
 }
 
-generate();
+/**
+ * Creates the complete directory including parents, similar to the `mkdir -p`
+ * shell command.
+ * 
+ * The directory created is in the `parent` directory, which should
+ * probably be the `__dirname` value.
+ * 
+ * **Note:** If the directory can not be created (for instance, if it already
+ * exists), then the error is silently ignored. This will probably caused us
+ * problems.
+ * 
+ * @param {String} parent The parent directory to create it in. This must exist.  
+ * @param {String} file   The pathname to create, e.g. `public/docs` 
+ */
+function mkdirs ( parent, file ) {
+    // console.log(parent, file);
+    if ( file == parent || file === '.' ) {
+        return;
+    }
+    mkdirs ( parent, path.dirname(file) );
+    
+    try {
+        fs.mkdirSync( path.join(parent, file) );
+    }
+    catch (e) {
+        // We are just going to ignore all exceptions...
+    }
+}
