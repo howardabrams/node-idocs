@@ -2,7 +2,7 @@
   "author": "Howard Abrams <howard.abrams@gmail.com> (http://www.github.com/howardabrams)",
   "name": "node-idocs",
   "description": "Generate internal functional documentation of your JavaScript project",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage": "http://www.github.com/howardabrams/node-idocs",
   "keywords": [
     "documentation",
